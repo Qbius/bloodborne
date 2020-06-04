@@ -348,26 +348,60 @@ let app = new Vue({
             }
         },
 
-        level() {
-            return Math.max(this.info.vitality.selected + this.info.endurance.selected + this.info.physical.selected[0] + this.info.physical.selected[1] + this.info.bloodtinge.selected + this.info.arcane.selected - 50, 0);
-        },
-
-        souls_to_level() {
-            let base_level = (this.global.chosen_class == "Waste of Skin") ? 4 : 10;
-            return range(this.level + 1).filter(i => i > base_level).map(this.souls_to_level_up).reduce((total, ele) => ele + total, 0);
-        },
-
-        class_levels() {
-            let base_level = (this.global.chosen_class == "Waste of Skin") ? 4 : 10;
+        levels_to_classes() {
             let currvit = this.info.vitality.selected;
             let currend = this.info.endurance.selected;
             let currstr = this.info.physical.selected[0];
             let currskl = this.info.physical.selected[1];
             let currblt = this.info.bloodtinge.selected;
             let currarc = this.info.arcane.selected;
-            return Object.entries(this.global.classes).reduce((obj, [classname, [vit, end, str, skl, blt, arc]]) => Object.assign(obj, {
-                [classname]: Math.max(currvit - vit + currend - end + currstr - str + currskl - skl + currblt - blt + currarc - arc, 0) + base_level
+            return Object.entries(this.global.classes).filter(([n, _]) => n !== "Choose for me").reduce((obj, [classname, [vit, end, str, skl, blt, arc]]) => Object.assign(obj, {
+                [Math.max(currvit - vit, 0) + Math.max(currend - end, 0) +  Math.max(currstr - str, 0) +  Math.max(currskl - skl, 0) + Math.max(currblt - blt, 0) +  Math.max(currarc - arc, 0) + ((classname == "Waste of Skin") ? 4 : 10)]: classname
             }), {});
-        }
+        },
+        
+        best_class_level() {
+            return Math.min(...Object.keys(this.levels_to_classes));
+        },
+        
+        vitality() {
+            return Math.min(Math.max(this.info.vitality.selected, (this.global.chosen_class == "Choose for me") ? this.global.classes[this.levels_to_classes[this.best_class_level]][0] : this.info.vitality.minimal), 99);
+        },
+        
+        endurance() {
+            return Math.min(Math.max(this.info.endurance.selected, (this.global.chosen_class == "Choose for me") ? this.global.classes[this.levels_to_classes[this.best_class_level]][1] : this.info.endurance.minimal), 99);
+        },
+        
+        strength() {
+            return Math.min(Math.max(this.info.physical.selected[0], (this.global.chosen_class == "Choose for me") ? this.global.classes[this.levels_to_classes[this.best_class_level]][2] : this.info.physical.minimal_strength), 99);
+        },
+        
+        skill() {
+            return Math.min(Math.max(this.info.physical.selected[1], (this.global.chosen_class == "Choose for me") ? this.global.classes[this.levels_to_classes[this.best_class_level]][3] : this.info.physical.minimal_skill), 99);
+        },
+
+        bloodtinge() {
+            return Math.min(Math.max(this.info.bloodtinge.selected, (this.global.chosen_class == "Choose for me") ? this.global.classes[this.levels_to_classes[this.best_class_level]][4] : this.info.bloodtinge.minimal), 99);
+        },
+        
+        arcane() {
+            return Math.min(Math.max(this.info.arcane.selected, (this.global.chosen_class == "Choose for me") ? this.global.classes[this.levels_to_classes[this.best_class_level]][5] : this.info.arcane.minimal), 99);
+        },
+
+        origin() {
+            return (this.global.chosen_class == "Choose for me") ? this.levels_to_classes[this.best_class_level] : this.global.chosen_class;
+        },
+
+        current_level() {
+            return (this.origin == "Waste of Skin") ? 4 : 10;
+        },
+        
+        level() {
+            return (this.global.chosen_class == "Choose for me") ? this.best_class_level : Math.max(this.info.vitality.selected + this.info.endurance.selected + this.info.physical.selected[0] + this.info.physical.selected[1] + this.info.bloodtinge.selected + this.info.arcane.selected - 50, 0);
+        },
+        
+        souls_to_level() {
+            return range(this.level + 1).filter(i => i > this.current_level).map(this.souls_to_level_up).reduce((total, ele) => ele + total, 0);
+        },
     }
 });

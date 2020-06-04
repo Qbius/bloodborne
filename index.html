@@ -85,6 +85,12 @@
         margin-right: 3px;
     }
 
+    .overview-text {
+        font-size: 12px;
+        white-space: nowrap;
+        margin-left: 3px;
+    }
+
     .class-attrs {
         flex: 1;
         display: flex;
@@ -250,20 +256,17 @@
     -->
 
     <div style="display: flex; align-items: stretch; justify-content: space-between; padding: 1px; height: 100%">
-        <div style="flex: 1; display: flex; flex-direction: column;">
-            <div class="info-selection">
-
-            </div>
-            <div class="damage-table" style="flex: 1; background-color: #181818; color: #dee2e6; border: 1px solid #dee2e6; border-radius: 3px;">
-                <div>Vitality: {{ info.vitality.selected }}</div>
-                <div>Endurance: {{ info.endurance.selected }}</div>
-                <div>Strength: {{ info.physical.selected[0] }}</div>
-                <div>Skill: {{ info.physical.selected[1] }}</div>
-                <div>Bloodtinge: {{ info.bloodtinge.selected }}</div>
-                <div>Arcane: {{ info.arcane.selected }}</div>
-                <div>Level: {{ level }}</div>
-                <div>Blood Echoes required: {{ souls_to_level }}</div>
-            </div>
+        <div style="padding: 5px; flex: 1; display: flex; flex-direction: column; align-items: stretch; background-color: #181818; color: #dee2e6; border-radius: 3px;">
+            <div style="display: flex; align-items: center;"><img class="attr-image" src="icons/vitality.jpg"><span class="overview-text">ORIGIN:</span><div style="flex: 1;"></div> <span class="overview-text">{{ origin }}</span></div>
+            <div style="display: flex; align-items: center;"><img class="attr-image" src="icons/vitality.jpg"><span class="overview-text">VITALITY:</span><div style="flex: 1;"></div> <span class="overview-text">{{ vitality }}</span></div>
+            <div style="display: flex; align-items: center;"><img class="attr-image" src="icons/endurance.jpg"><span class="overview-text">ENDURANCE:</span><div style="flex: 1;"></div> <span class="overview-text">{{ endurance }}</span></div>
+            <div style="display: flex; align-items: center;"><img class="attr-image" src="icons/strength.jpg"><span class="overview-text">STRENGTH:</span><div style="flex: 1;"></div> <span class="overview-text">{{ strength }}</span></div>
+            <div style="display: flex; align-items: center;"><img class="attr-image" src="icons/skill.jpg"><span class="overview-text">SKILL:</span><div style="flex: 1;"></div> <span class="overview-text">{{ skill }}</span></div>
+            <div style="display: flex; align-items: center;"><img class="attr-image" src="icons/bloodtinge.jpg"><span class="overview-text">BLOODTINGE:</span><div style="flex: 1;"></div> <span class="overview-text">{{ bloodtinge }}</span></div>
+            <div style="display: flex; align-items: center;"><img class="attr-image" src="icons/arcane.jpg"><span class="overview-text">ARCANE:</span><div style="flex: 1;"></div> <span class="overview-text">{{ arcane }}</span></div>
+            <div style="display: flex; align-items: center;"><img class="attr-image" src="icons/level.jpg"><span class="overview-text">CURRENT LEVEL:</span><div style="flex: 1;"></div> <span class="overview-text">{{ current_level }}</span></div>
+            <div style="display: flex; align-items: center;"><img class="attr-image" src="icons/level.jpg"><span class="overview-text">LEVEL:</span><div style="flex: 1;"></div> <span class="overview-text">{{ level }}</span></div>
+            <div style="display: flex; align-items: center;"><img class="attr-image" src="icons/blood_echoes.jpg"><span class="overview-text">Blood Echoes required:</span><div style="flex: 1;"></div> <span class="overview-text">{{ souls_to_level }}</span></div>
         </div>
         <div style="display: flex; flex-direction: column; justify-content: space-between;">
             <div class="info-selection">
