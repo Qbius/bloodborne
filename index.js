@@ -296,6 +296,10 @@ let app = new Vue({
         // here only to make components work before mount
     },
 
+    mounted() {
+        this.change_class("Milquetoast");
+    },
+
     methods: {
         change_class(class_name) {
             this.global.chosen_class = class_name;
