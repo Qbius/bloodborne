@@ -11,6 +11,7 @@
     :root {
         --backgroundcolor: #6c757d;
         --middgroundcolor: #444D55;
+        --disabledcolor: #383838;
     }
 
     #app {
@@ -27,13 +28,16 @@
 
     .damage-tables {
         flex: 1;
+        width: 100%;
+        max-height: 821px;
         display: flex;
-        flex-wrap: wrap;
         justify-content: center;
-        align-items: center;
+        align-items: stretch;
+        margin-top: 5px;
     }
 
     .damage-table {
+        max-width: 1294px;
         border-radius: 3px;
         border: 1px solid var(--middgroundcolor);
         display: flex;
@@ -41,6 +45,13 @@
         justify-content: center;
         align-items: center;
         padding: 1px;
+        margin-left: 2px;
+        margin-right: 2px;
+        overflow: scroll;
+    }
+
+    .damage-table::-webkit-scrollbar {
+        display: none;
     }
 
     .weapon-image {
@@ -50,9 +61,44 @@
         border: 1px solid #262F37;
     }
 
+    .class-header {
+        margin: 5px;
+        background-color: var(--backgroundcolor);
+        border-radius: 3px;
+        border: 1px solid black;
+        padding: 3px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .class-header:hover {
+        opacity: 0.6;
+    }
+
+    .class-text {
+
+    }
+
+    .class-attrs {
+        display: flex;
+        align-items: center;
+    }
+
     .attr-image {
         width: 15px;
         height: 15px;
+    }
+
+    .attr-text-container {
+        margin-left: 2px;
+        margin-right: 2px;
+        display: flex;
+        align-items: center;
+    }
+
+    .attr-text {
+
     }
 
     .weapon-image:hover {
@@ -79,14 +125,16 @@
 
     .item-header {
         border-radius: 3px;
-        background-color: var(--middgroundcolor);
         color: #dee2e6;
         margin: 1px;
     }
 
     .item-value {
-        background-color: #262F37;
         border-radius: 3px;   
+    }
+
+    .value-disabled {
+        pointer-events: none;
     }
 
     .item-text {
@@ -100,12 +148,15 @@
     }
 
     .hovered {
-        background-color: #dee2e6;
-        color: var(--middgroundcolor);
+        background-color: #dee2e6; color: var(--middgroundcolor);
     }
 
     .highest {
         background-color: black;
+    }
+
+    .blurred {
+        filter: blur(5px);
     }
 
 </style>
@@ -114,44 +165,125 @@
 <body>
 <div id="app">
 
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding-top: 10px; padding-bottom: 10px; height: 100%">
-        <div class="info-selection">
-            <div style="display: flex; justify-content: center; flex-wrap: wrap;">
-                <img v-for="([name, info]) in Object.entries(weapons)" class="weapon-image" :class="(name == chosen_weapon) ? 'selected-image' : ''" :style="(name == chosen_weapon) ? 'filter: contrast(150%);' : ''" :title="name" :src="`icons/${name.toLowerCase().replace(/ /g, '_').replace(/'/g, '')}.png`" @click="chosen_weapon = name">
-            </div>
-        </div>
-        <div class="damage-tables">
-            <div class="damage-table" v-if="damage_types.physical">
-                <div style="display: flex; justify-content: center;" @mouseleave="hovered = [0, 0]">
-                    <div class="column"> 
-                        <div class="item-container">
-                            <div class="item item-header" :style="(show_percentages ? 'background-color: #99CCFF;' : 'background-color: gray;')" @click="show_percentages = !show_percentages">
-                                <span class="item-text">%</span>
-                            </div>
-                        </div>
-                        <div v-for="i in fullrange" v-if="within_skill_bounds(i)" class="item-container">
-                            <div class="item item-header" :class="(hovered[1] == i) ? 'hovered' : ''">
-                                <img v-if="i == selected[1]" class="attr-image" src="icons/skill.jpg">
-                                <span v-else class="item-text">{{ i }}</span>
-                            </div>
+    <!--
+        TEMPLATES
+    -->
+
+    <script type="text/x-template" id="value-table">
+        <div class="damage-table">
+            <div style="display: flex; flex-direction: column; max-height: 821px;" @mouseleave="info.hovered = [0, 0]">
+                <div style="display: flex;">
+                    <div class="item-container">
+                        <div class="item item-header" :style="(info.show_percentages ? 'background-color: #99CCFF;' : 'background-color: gray;')" @click="info.show_percentages = !info.show_percentages">
+                            <span class="item-text">%</span>
                         </div>
                     </div>
-                    <div v-for="x in fullrange" v-if="within_strength_bounds(x)" class="column">
-                        <div class="item-container">
-                            <div class="item item-header" :class="(hovered[0] == x) ? 'hovered' : ''">
-                                <img v-if="x == selected[0]" class="attr-image" src="icons/strength.jpg">
-                                <span v-else class="item-text">{{ x }}</span>
-                            </div>
+                    <div class="item-container">
+                        <div class="item item-header" :style="'background-color: ' + info.header_color + ';'">
+                            <img class="attr-image" :src="info.head_icon_f(global)">
                         </div>
-                        <div v-for="y in fullrange" v-if="within_bounds(x, y)" class="item-container" @click="selected = [x, y]" @mouseenter="hovered = [x, y]" @mouseleave="hovered = [0, 0]">
-                            <div class="item item-value" :style="'background-color: ' + physical_colors[x][y] + ';' + (is_highest_in_diagonal(x, y) ? 'background-color: black; color: #dee2e6;' : '') + ((hovered[0] == x && hovered[1] == y) ? 'border: solid 1px #dee2e6;' : 'margin: 1px;') + ((selected[0] == x && selected[1] == y) ? 'background-color: #dee2e6; color: var(--middgroundcolor);' : '')">
-                                <span v-show="show_percentages" class="item-text">{{ Math.floor(physical_percentages[x][y] * 100) }}%</span>
-                                <span v-show="!show_percentages" class="item-text">{{ Math.floor(physical[x][y]) }}</span>
-                            </div>
+                    </div>
+                </div>
+                <div v-for="y in fullrange" v-if="within_bounds(y)" style="display: flex;">
+                    <div class="item-container">
+                        <div class="item item-header" :style="(info.hovered == y) ? 'background-color: #dee2e6; color: var(--middgroundcolor);' : ('background-color: ' + info.header_color + ';')">
+                            <img v-if="y == info.selected" class="attr-image" :src="info.attr_icon">
+                            <span v-else class="item-text">{{ y }}</span>
+                        </div>
+                    </div>
+                    <div class="item-container" @click="if (y >= info.minimal) info.selected = y" @mouseenter="if (y >= info.minimal) info.hovered = y" @mouseleave="if (y >= info.minimal) info.hovered = 0">
+                        <div class="item item-value" :style="'background-color: ' + info.value_color + '; color: ' + info.text_color + ';' + ((info.hovered == y) ? 'border: solid 1px #dee2e6;' : 'margin: 1px;') + (irrelevant ? 'background-color: #383838; color: white;' : '') + ((info.selected == y) ? 'background-color: #dee2e6; color: var(--middgroundcolor);' : '') + ((y < info.minimal ) ? 'background-color: var(--disabledcolor); color: var(--disabledcolor);' : '')">
+                            <span v-show="!info.show_percentages" class="item-text">{{ Math.floor(value[y]) }}</span>
+                            <span v-show="info.show_percentages" class="item-text">{{ Math.floor(value_percentages[y] * 100) }}%</span>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </script>
+
+    <script type="text/x-template" id="physical-table">
+        <div class="damage-table">
+            <div style="display: flex; justify-content: center;" @mouseleave="info.hovered = [0, 0]">
+                <div style="display: flex; flex-direction: column;"> 
+                    <div class="item-container">
+                        <div class="item item-header" :style="'background-color: var(--middgroundcolor);' + (info.show_percentages ? 'background-color: #99CCFF;' : 'background-color: gray;')" @click="info.show_percentages = !info.show_percentages">
+                            <span class="item-text">%</span>
+                        </div>
+                    </div>
+                    <div v-for="i in fullrange" v-if="within_skill_bounds(i)" class="item-container">
+                        <div class="item item-header" :style="(info.hovered[1] == i) ? 'background-color: #dee2e6; color: var(--middgroundcolor);' : 'background-color: var(--middgroundcolor);'">
+                            <img v-if="i == info.selected[1]" class="attr-image" src="icons/skill.jpg">
+                            <span v-else class="item-text">{{ i }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div v-for="x in fullrange" v-if="within_strength_bounds(x)" style="display: flex; flex-direction: column;">
+                    <div class="item-container">
+                        <div class="item item-header" :style="(info.hovered[0] == x) ? 'background-color: #dee2e6; color: var(--middgroundcolor);' : 'background-color: var(--middgroundcolor);'">
+                            <img v-if="x == info.selected[0]" class="attr-image" src="icons/strength.jpg">
+                            <span v-else class="item-text">{{ x }}</span>
+                        </div>
+                    </div>
+                    <div v-for="y in fullrange" v-if="within_bounds(x, y)" class="item-container" @click="if (x >= info.minimal_strength && y >= info.minimal_skill) info.selected = [x, y]" @mouseenter="if (x >= info.minimal_strength && y >= info.minimal_skill) info.hovered = [x, y]" @mouseleave="if (x >= info.minimal_strength && y >= info.minimal_skill) info.hovered = [0, 0]">
+                        <div class="item item-value" :style="'background-color: ' + colors[x][y] + ';' + (is_highest_in_diagonal(x, y) ? 'background-color: black; color: #dee2e6;' : '') + ((info.hovered[0] == x && info.hovered[1] == y) ? 'border: solid 1px #dee2e6;' : 'margin: 1px;') + (irrelevant ? 'background-color: #383838; color: white;' : '') + ((info.selected[0] == x && info.selected[1] == y) ? 'background-color: #dee2e6; color: var(--middgroundcolor);' : '') + ((x < info.minimal_strength || y < info.minimal_skill) ? 'background-color: var(--disabledcolor); color: var(--disabledcolor);' : '')">
+                            <span v-show="!info.show_percentages" class="item-text">{{ Math.floor(damage[x][y]) }}</span>
+                            <span v-show="info.show_percentages" class="item-text">{{ Math.floor(damage_percentages[x][y] * 100) }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+    
+
+    <!--
+        END TEMPLATES
+    -->
+
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding-top: 10px; padding-bottom: 10px; height: 100%">
+        <div class="info-selection">
+            <div style="display: flex; justify-content: center; flex-wrap: wrap;">
+                <img v-for="([name, info]) in Object.entries(global.weapons)" class="weapon-image" :class="(name == global.chosen_weapon) ? 'selected-image' : ''" :style="(name == global.chosen_weapon) ? 'filter: contrast(150%);' : ''" :title="name" :src="`icons/${name.toLowerCase().replace(/ /g, '_').replace(/'/g, '')}.png`" @click="global.chosen_weapon = name; console.log(global)">
+            </div>
+        </div>
+        <div class="info-selection">
+            <div style="display: flex; justify-content: center; flex-wrap: wrap;">
+                <div v-for="([name, info]) in Object.entries(global.classes)" class="class-header" :class="(name == global.chosen_class) ? 'selected-image' : ''" :style="(name == global.chosen_class) ? 'filter: contrast(150%);' : ''" :title="name" @click="change_class(name)">
+                    <span class="class-text">{{ name }}</span>
+                    <div class="class-attrs">
+                        <img class="attr-image" src="icons/vitality.jpg">
+                        <div class="attr-text-container"><span class="attrs-text">{{ info[0] }}</span></div>
+                        <img class="attr-image" src="icons/endurance.jpg">
+                        <div class="attr-text-container"><span class="attrs-text">{{ info[1] }}</span></div>
+                        <img class="attr-image" src="icons/strength.jpg">
+                        <div class="attr-text-container"><span class="attrs-text">{{ info[2] }}</span></div>
+                        <img class="attr-image" src="icons/skill.jpg">
+                        <div class="attr-text-container"><span class="attrs-text">{{ info[3] }}</span></div>
+                        <img class="attr-image" src="icons/bloodtinge.jpg">
+                        <div class="attr-text-container"><span class="attrs-text">{{ info[4] }}</span></div>
+                        <img class="attr-image" src="icons/arcane.jpg">
+                        <div class="attr-text-container"><span class="attrs-text">{{ info[5] }}</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="damage-tables">
+            <div class="damage-table" style="flex: 1; background-color: #181818; color: #dee2e6; border: 1px solid #dee2e6; border-radius: 3px;">
+                <div>Vitality: {{ info.vitality.selected }}</div>
+                <div>Endurance: {{ info.endurance.selected }}</div>
+                <div>Strength: {{ info.physical.selected[0] }}</div>
+                <div>Skill: {{ info.physical.selected[1] }}</div>
+                <div>Bloodtinge: {{ info.bloodtinge.selected }}</div>
+                <div>Arcane: {{ info.arcane.selected }}</div>
+                <div>Level: {{ level }}</div>
+                <div>Blood Echoes required: {{ souls_to_level }}</div>
+            </div>
+            <value-table :global="global" :info="info.vitality"></value-table>
+            <value-table :global="global" :info="info.endurance"></value-table>
+            <value-table :global="global" :info="info.bloodtinge" :irrelevant="!damage_types.blood"></value-table>
+            <value-table :global="global" :info="info.arcane" :irrelevant="!damage_types.elemental"></value-table>
+            <physical-table :global="global" :info="info.physical" :irrelevant="!damage_types.physical"></physical-table>
         </div>
     </div>
         
