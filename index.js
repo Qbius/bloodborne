@@ -355,9 +355,22 @@ let app = new Vue({
             let currskl = this.info.physical.selected[1];
             let currblt = this.info.bloodtinge.selected;
             let currarc = this.info.arcane.selected;
-            return Object.entries(this.global.classes).filter(([n, _]) => n !== "Choose for me").reduce((obj, [classname, [vit, end, str, skl, blt, arc]]) => Object.assign(obj, {
-                [Math.max(currvit - vit, 0) + Math.max(currend - end, 0) +  Math.max(currstr - str, 0) +  Math.max(currskl - skl, 0) + Math.max(currblt - blt, 0) +  Math.max(currarc - arc, 0) + ((classname == "Waste of Skin") ? 4 : 10)]: classname
-            }), {});
+            return Object.entries(this.global.classes).filter(([n, _]) => n !== "Choose for me").reduce((obj, [classname, [vit, end, str, skl, blt, arc]]) => {
+                let value = Math.max(currvit - vit, 0) + Math.max(currend - end, 0) +  Math.max(currstr - str, 0) +  Math.max(currskl - skl, 0) + Math.max(currblt - blt, 0) +  Math.max(currarc - arc, 0) + ((classname == "Waste of Skin") ? 4 : 10);
+                if (value in obj) {
+                    let[ovit, oend, ostr, oskl, oblt, oarc] = this.global.classes[obj[value]];
+                    let revbonusesme = [Math.min(currvit - vit, 0), Math.min(currend - end, 0),  Math.min(currarc - arc, 0), Math.min(currstr - str, 0),  Math.min(currskl - skl, 0), Math.min(currblt - blt, 0)];
+                    let revbonusesot = [Math.min(currvit - ovit, 0), Math.min(currend - oend, 0),  Math.min(currarc - oarc, 0), Math.min(currstr - ostr, 0),  Math.min(currskl - oskl, 0), Math.min(currblt - oblt, 0)];
+                    for (const i of range(6)) {
+                        if (revbonusesot[i] < revbonusesme[i]) {
+                            return obj;
+                        }
+                    }
+                }
+                return Object.assign(obj, {
+                    [value]: classname
+                });
+            }, {});
         },
         
         best_class_level() {
