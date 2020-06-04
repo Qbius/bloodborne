@@ -159,6 +159,7 @@ let app = new Vue({
             },
 
             classes: {
+                "Choose for me": [],
                 "Milquetoast": [11, 10, 12, 10, 9, 8],
                 "Lone Survivor": [14, 11, 11, 10, 7, 7],
                 "Troubled Childhood": [9, 14, 9, 13, 6, 9],
@@ -297,38 +298,39 @@ let app = new Vue({
     },
 
     mounted() {
-        this.change_class("Milquetoast");
+        this.change_class("Choose for me");
     },
 
     methods: {
         change_class(class_name) {
             this.global.chosen_class = class_name;
-            let[vit, end, str, skl, blt, arc] = this.global.classes[class_name];
 
-            let vit_prev = this.info.vitality.minimal;
-            this.info.vitality.minimal = vit;
-            if (this.info.vitality.selected < vit || this.info.vitality.selected == vit_prev) this.info.vitality.selected = vit;
-            
-            let end_prev = this.info.endurance.minimal;
-            this.info.endurance.minimal = end;
-            if (this.info.endurance.selected < end || this.info.endurance.selected == end_prev) this.info.endurance.selected = end;
-            
+            let[vit, end, str, skl, blt, arc] = (class_name == "Choose for me") ? [7, 8, 9, 9, 5, 6] : this.global.classes[class_name];
+
+            for (const [attr, infoprop] of [[vit, 'vitality'], [end, 'endurance'], [blt, 'bloodtinge'], [arc, 'arcane']]) {
+                let prev = this.info[infoprop].minimal;
+                this.info[infoprop].minimal = attr;
+                if (this.info[infoprop].selected < attr || this.info[infoprop].selected == prev) this.info[infoprop].selected = attr;
+            }
+
             let str_prev = this.info.physical.minimal_strength;
-            this.info.physical.minimal_strength = str;
-            if (this.info.physical.selected[0] < str || this.info.physical.selected[0] == str_prev) this.info.physical.selected[0] = str;
-            
             let skl_prev = this.info.physical.minimal_skill;
+
+            this.info.physical.minimal_strength = str;
             this.info.physical.minimal_skill = skl;
-            if (this.info.physical.selected[1] < skl || this.info.physical.selected[1] == skl_prev) this.info.physical.selected[1] = skl;
-            
-            let blt_prev = this.info.bloodtinge.minimal;
-            this.info.bloodtinge.minimal = blt;
-            if (this.info.bloodtinge.selected < blt || this.info.bloodtinge.selected == blt_prev) this.info.bloodtinge.selected = blt;
-            
-            let arc_prev = this.info.arcane.minimal;
-            this.info.arcane.minimal = arc;
-            if (this.info.arcane.selected < arc || this.info.arcane.selected == arc_prev) this.info.arcane.selected = arc;
+
+            if (this.info.physical.selected[0] == str_prev && this.info.physical.selected[1] == skl_prev) {
+                this.info.physical.selected[0] = str;
+                this.info.physical.selected[1] = skl
+            }
+            else {
+                if (this.info.physical.selected[0] < str) 
+                    this.info.physical.selected[0] = str;            
+                if (this.info.physical.selected[1] < skl) 
+                    this.info.physical.selected[1] = skl;
+            }
         },
+                
         souls_to_level_up(level) {
             if (level < 5)       return 0;
             else if (level < 12) return [724, 741, 758, 775, 793, 811, 829][level - 5]
@@ -354,5 +356,18 @@ let app = new Vue({
             let base_level = (this.global.chosen_class == "Waste of Skin") ? 4 : 10;
             return range(this.level + 1).filter(i => i > base_level).map(this.souls_to_level_up).reduce((total, ele) => ele + total, 0);
         },
+
+        class_levels() {
+            let base_level = (this.global.chosen_class == "Waste of Skin") ? 4 : 10;
+            let currvit = this.info.vitality.selected;
+            let currend = this.info.endurance.selected;
+            let currstr = this.info.physical.selected[0];
+            let currskl = this.info.physical.selected[1];
+            let currblt = this.info.bloodtinge.selected;
+            let currarc = this.info.arcane.selected;
+            return Object.entries(this.global.classes).reduce((obj, [classname, [vit, end, str, skl, blt, arc]]) => Object.assign(obj, {
+                [classname]: Math.max(currvit - vit + currend - end + currstr - str + currskl - skl + currblt - blt + currarc - arc, 0) + base_level
+            }), {});
+        }
     }
 });

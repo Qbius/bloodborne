@@ -23,7 +23,10 @@
     .info-selection {
         border-radius: 12px;
         background-color: var(--middgroundcolor);
-        padding: 5px;
+        padding: 2px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
     }
 
     .damage-tables {
@@ -33,7 +36,6 @@
         display: flex;
         justify-content: center;
         align-items: stretch;
-        margin-top: 5px;
     }
 
     .damage-table {
@@ -55,20 +57,21 @@
     }
 
     .weapon-image {
-        width: 64px;
-        height: 64px;
+        width: 52px;
+        height: 52px;
         margin: 1px;
         border: 1px solid #262F37;
     }
 
     .class-header {
-        margin: 5px;
-        background-color: var(--backgroundcolor);
+        margin: 2px;
+        background-color: var(--middgroundcolor);
+        color: #dee2e6;
         border-radius: 3px;
         border: 1px solid black;
-        padding: 3px;
+        padding: 2px;
         display: flex;
-        flex-direction: column;
+        justify-content: space-between;
         align-items: center;
     }
 
@@ -77,12 +80,16 @@
     }
 
     .class-text {
-
+        font-size: 10px;
+        white-space: nowrap;
+        margin-right: 3px;
     }
 
     .class-attrs {
+        flex: 1;
         display: flex;
         align-items: center;
+        justify-content: flex-end;
     }
 
     .attr-image {
@@ -91,14 +98,15 @@
     }
 
     .attr-text-container {
+        width: 15px;
         margin-left: 2px;
-        margin-right: 2px;
+        margin-right: 3px;
         display: flex;
         align-items: center;
     }
 
     .attr-text {
-
+        font-size: 12px;
     }
 
     .weapon-image:hover {
@@ -241,34 +249,11 @@
         END TEMPLATES
     -->
 
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding-top: 10px; padding-bottom: 10px; height: 100%">
-        <div class="info-selection">
-            <div style="display: flex; justify-content: center; flex-wrap: wrap;">
-                <img v-for="([name, info]) in Object.entries(global.weapons)" class="weapon-image" :class="(name == global.chosen_weapon) ? 'selected-image' : ''" :style="(name == global.chosen_weapon) ? 'filter: contrast(150%);' : ''" :title="name" :src="`icons/${name.toLowerCase().replace(/ /g, '_').replace(/'/g, '')}.png`" @click="global.chosen_weapon = name; console.log(global)">
+    <div style="display: flex; align-items: stretch; justify-content: space-between; padding: 1px; height: 100%">
+        <div style="flex: 1; display: flex; flex-direction: column;">
+            <div class="info-selection">
+
             </div>
-        </div>
-        <div class="info-selection">
-            <div style="display: flex; justify-content: center; flex-wrap: wrap;">
-                <div v-for="([name, info]) in Object.entries(global.classes)" class="class-header" :class="(name == global.chosen_class) ? 'selected-image' : ''" :style="(name == global.chosen_class) ? 'filter: contrast(150%);' : ''" :title="name" @click="change_class(name)">
-                    <span class="class-text">{{ name }}</span>
-                    <div class="class-attrs">
-                        <img class="attr-image" src="icons/vitality.jpg">
-                        <div class="attr-text-container"><span class="attrs-text">{{ info[0] }}</span></div>
-                        <img class="attr-image" src="icons/endurance.jpg">
-                        <div class="attr-text-container"><span class="attrs-text">{{ info[1] }}</span></div>
-                        <img class="attr-image" src="icons/strength.jpg">
-                        <div class="attr-text-container"><span class="attrs-text">{{ info[2] }}</span></div>
-                        <img class="attr-image" src="icons/skill.jpg">
-                        <div class="attr-text-container"><span class="attrs-text">{{ info[3] }}</span></div>
-                        <img class="attr-image" src="icons/bloodtinge.jpg">
-                        <div class="attr-text-container"><span class="attrs-text">{{ info[4] }}</span></div>
-                        <img class="attr-image" src="icons/arcane.jpg">
-                        <div class="attr-text-container"><span class="attrs-text">{{ info[5] }}</span></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="damage-tables">
             <div class="damage-table" style="flex: 1; background-color: #181818; color: #dee2e6; border: 1px solid #dee2e6; border-radius: 3px;">
                 <div>Vitality: {{ info.vitality.selected }}</div>
                 <div>Endurance: {{ info.endurance.selected }}</div>
@@ -279,11 +264,39 @@
                 <div>Level: {{ level }}</div>
                 <div>Blood Echoes required: {{ souls_to_level }}</div>
             </div>
-            <value-table :global="global" :info="info.vitality"></value-table>
-            <value-table :global="global" :info="info.endurance"></value-table>
-            <value-table :global="global" :info="info.bloodtinge" :irrelevant="!damage_types.blood"></value-table>
-            <value-table :global="global" :info="info.arcane" :irrelevant="!damage_types.elemental"></value-table>
-            <physical-table :global="global" :info="info.physical" :irrelevant="!damage_types.physical"></physical-table>
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="info-selection">
+                <img v-for="([name, info]) in Object.entries(global.weapons)" class="weapon-image" :class="(name == global.chosen_weapon) ? 'selected-image' : ''" :style="(name == global.chosen_weapon) ? 'filter: contrast(150%);' : ''" :title="name" :src="`icons/${name.toLowerCase().replace(/ /g, '_').replace(/'/g, '')}.png`" @click="global.chosen_weapon = name; console.log(global)">
+            </div>
+            <div style="display: flex; align-items: stretch">
+                <div v-for="i in 5" style="flex: 1; display: flex; flex-direction: column; align-items: stretch;">
+                    <div v-for="([name, info]) in Object.entries(global.classes).slice(2 * (i - 1), 2 * i)" class="class-header" :class="(name == global.chosen_class) ? 'selected-image' : ''" :style="(name == global.chosen_class) ? 'filter: contrast(150%);' : ''" style="flex: 1; display: flex; justify-content: center;" :title="name" @click="change_class(name)">
+                        <span class="class-text">{{ name.toUpperCase() }}</span>
+                        <div v-if="info.length == 6" class="class-attrs">
+                            <div class="attr-text-container"><div style="flex: 1;"></div><span class="attr-text">{{ info[0] }}</span></div>
+                            <img class="attr-image" src="icons/vitality.jpg">
+                            <div class="attr-text-container"><div style="flex: 1;"></div><span class="attr-text">{{ info[1] }}</span></div>
+                            <img class="attr-image" src="icons/endurance.jpg">
+                            <div class="attr-text-container"><div style="flex: 1;"></div><span class="attr-text">{{ info[2] }}</span></div>
+                            <img class="attr-image" src="icons/strength.jpg">
+                            <div class="attr-text-container"><div style="flex: 1;"></div><span class="attr-text">{{ info[3] }}</span></div>
+                            <img class="attr-image" src="icons/skill.jpg">
+                            <div class="attr-text-container"><div style="flex: 1;"></div><span class="attr-text">{{ info[4] }}</span></div>
+                            <img class="attr-image" src="icons/bloodtinge.jpg">
+                            <div class="attr-text-container"><div style="flex: 1;"></div><span class="attr-text">{{ info[5] }}</span></div>
+                            <img class="attr-image" src="icons/arcane.jpg">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="damage-tables">
+                <value-table :global="global" :info="info.vitality"></value-table>
+                <value-table :global="global" :info="info.endurance"></value-table>
+                <value-table :global="global" :info="info.bloodtinge" :irrelevant="!damage_types.blood"></value-table>
+                <value-table :global="global" :info="info.arcane" :irrelevant="!damage_types.elemental"></value-table>
+                <physical-table :global="global" :info="info.physical" :irrelevant="!damage_types.physical"></physical-table>
+            </div>
         </div>
     </div>
         
