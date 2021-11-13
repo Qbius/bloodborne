@@ -9,19 +9,23 @@
 
 <style type="text/css">
     :root {
+        --darkerbackgroundcolor: #1f2122;
         --backgroundcolor: #6c757d;
         --middgroundcolor: #444D55;
         --disabledcolor: #383838;
     }
 
     body {
-        background-color: var(--backgroundcolor);
-
+        background-color: var(--darkerbackgroundcolor);
+        display: flex;
+        justify-content: center;
     }
 
     #app {
         width: 100%;
         height: 100%;
+        max-width: 1920px;
+        background-color: var(--backgroundcolor);
     }
 
     .info-selection {
